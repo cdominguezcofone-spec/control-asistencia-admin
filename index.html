@@ -1,69 +1,101 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de QR con Enlace</title>
-    <!-- Librería para generar QRs visuales -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 420px; text-align: center; box-sizing: border-box; }
-        input, button { width: 100%; padding: 10px; margin-top: 10px; box-sizing: border-box; border-radius: 6px; border: 1px solid #ccc; font-size: 16px;}
-        button { background: #007bff; color: white; border: none; font-weight: bold; cursor: pointer; }
-        button:hover { background: #0056b3; }
-        #qrcode { display: flex; justify-content: center; margin-top: 20px; }
-        .info-link { font-size: 11px; color: #666; word-break: break-all; margin-top: 10px; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h2>Generar QR de Acceso</h2>
-        <p>Crea el QR que llevará directo al fichaje del empleado</p>
-        
-        <input type="text" id="nombreEmpleado" placeholder="Nombre y Apellido">
-        <button onclick="generarCredencialQR()">Generar Credencial QR</button>
+const URL_API = "https://script.google.com/macros/s/AKfycbxTVMD4qWKsYNShhFbdvO9bY2G_kpzlDM8p15qOkT5sHk37X5jshF8DNoHIPK396ZWk9A/exec";
 
-        <div style="margin-top: 15px; text-align: left;">
-            <p><strong>ID Generado:</strong> <span id="txt-id" style="color: #007bff;">-</span></p>
-        </div>
+window.onload = function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const idUrl = urlParams.get("id");
 
-        <div id="qrcode"></div>
-        <div id="url-generada" class="info-link"></div>
-    </div>
+    if (idUrl) {
+        localStorage.setItem("id_empleado_guardado", idUrl);
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
 
-    <script>
-        function generarCredencialQR() {
-            const nombre = document.getElementById("nombreEmpleado").value.trim();
-            if (!nombre) {
-                alert("Por favor ingresa un nombre");
-                return;
-            }
+    const usuarioGuardado = localStorage.getItem("id_empleado_guardado");
+    if (usuarioGuardado) {
+        document.getElementById("idEmpleado").value = usuarioGuardado;
+        document.getElementById("input-container").style.display = "none";
+        document.getElementById("lbl-usuario").textContent = usuarioGuardado;
+        document.getElementById("usuario-guardado").style.display = "block";
+    }
+};
 
-            // 1. Generar ID único automático
-            const iniciales = nombre.split(" ").map(n => n[0]).join("").toUpperCase();
-            const aleatorio = Math.floor(1000 + Math.random() * 9000);
-            const idUnico = `${iniciales}-${aleatorio}`;
+function guardarUsuario() {
+    const id = document.getElementById("idEmpleado").value.trim();
+    if (!id) {
+        alert("Ingresá un ID válido.");
+        return;
+    }
+    localStorage.setItem("id_empleado_guardado", id);
+    location.reload();
+}
 
-            document.getElementById("txt-id").textContent = idUnico;
+function cambiarUsuario() {
+    localStorage.removeItem("id_empleado_guardado");
+    location.reload();
+}
 
-            // 2. URL base actualizada con tu repositorio real de GitHub Pages
-            const urlBaseApp = "https://cdominguezcofone-spec.github.io/control-asistencia-empresa/";
+function registrarFichaje(tipo, idForzado = null) {
+    const idEmpleado = idForzado || localStorage.getItem("id_empleado_guardado") || document.getElementById("idEmpleado").value.trim();
+    const mensajeEl = document.getElementById("mensaje");
 
-            // Creamos un enlace que pasa el ID por la URL (Ej: .../?id=JP-8421)
-            const urlCompleta = `${urlBaseApp}?id=${idUnico}`;
+    if (!idEmpleado) {
+        mensajeEl.style.color = "red";
+        mensajeEl.textContent = "Por favor, ingresa o escanea tu ID.";
+        return;
+    }
 
-            document.getElementById("url-generada").textContent = "Enlace: " + urlCompleta;
+    mensajeEl.style.color = "#333";
+    mensajeEl.textContent = "Procesando fichaje...";
 
-            // 3. Limpiar QR anterior y generar el nuevo con la URL completa
-            document.getElementById("qrcode").innerHTML = "";
+    const datos = {
+        id_empleado: idEmpleado,
+        tipo: tipo
+    };
 
-            new QRCode(document.getElementById("qrcode"), {
-                text: urlCompleta,
-                width: 200,
-                height: 200
-            });
+    fetch(URL_API, {
+        method: "POST",
+        mode: "no-cors", 
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(datos)
+    })
+    .then(() => {
+        mensajeEl.style.color = "green";
+        mensajeEl.textContent = `¡${tipo} registrada con éxito (${idEmpleado})!`;
+    })
+    .catch((error) => {
+        mensajeEl.style.color = "red";
+        mensajeEl.textContent = "Error al conectar con el servidor.";
+    });
+}
+
+let html5QrCode;
+function toggleScanner() {
+    const readerDiv = document.getElementById("reader");
+    if (readerDiv.style.display === "none") {
+        readerDiv.style.display = "block";
+        html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start(
+            { facingMode: "environment" }, 
+            { fps: 10, qrbox: 250 },
+            qrCodeMessage => {
+                html5QrCode.stop();
+                readerDiv.style.display = "none";
+                
+                let idDetectado = qrCodeMessage;
+                if (qrCodeMessage.includes("?id=")) {
+                    const urlEscaneada = new URL(qrCodeMessage);
+                    idDetectado = urlEscaneada.searchParams.get("id");
+                }
+
+                registrarFichaje("Entrada", idDetectado);
+            },
+            errorMessage => {}
+        ).catch(err => {
+            alert("No se pudo acceder a la cámara.");
+        });
+    } else {
+        if (html5QrCode) {
+            html5QrCode.stop();
         }
-    </script>
-</body>
-</html>
+        readerDiv.style.display = "none";
+    }
+}
