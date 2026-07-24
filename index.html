@@ -3,54 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de IDs y QRs</title>
+    <title>Generador de QR con Enlace</title>
     <!-- Librería para generar QRs visuales -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; box-sizing: border-box; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 420px; text-align: center; box-sizing: border-box; }
         input, button { width: 100%; padding: 10px; margin-top: 10px; box-sizing: border-box; border-radius: 6px; border: 1px solid #ccc; font-size: 16px;}
         button { background: #007bff; color: white; border: none; font-weight: bold; cursor: pointer; }
         button:hover { background: #0056b3; }
         #qrcode { display: flex; justify-content: center; margin-top: 20px; }
+        .info-link { font-size: 11px; color: #666; word-break: break-all; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2>Generar Credencial QR</h2>
-        <p>Crea un ID automático para tu empleado</p>
+        <h2>Generar QR de Acceso</h2>
+        <p>Crea el QR que llevará directo al fichaje del empleado</p>
         
-        <input type="text" id="nombreEmpleado" placeholder="Nombre y Apellido del Empleado">
-        <button onclick="generarCredencial()">Generar ID y QR</button>
+        <input type="text" id="nombreEmpleado" placeholder="Nombre y Apellido">
+        <button onclick="generarCredencialQR()">Generar Credencial QR</button>
 
         <div style="margin-top: 15px; text-align: left;">
             <p><strong>ID Generado:</strong> <span id="txt-id" style="color: #007bff;">-</span></p>
         </div>
 
         <div id="qrcode"></div>
+        <div id="url-generada" class="info-link"></div>
     </div>
 
     <script>
-        function generarCredencial() {
+        function generarCredencialQR() {
             const nombre = document.getElementById("nombreEmpleado").value.trim();
             if (!nombre) {
                 alert("Por favor ingresa un nombre");
                 return;
             }
 
-            // Genera un ID único automático basado en las iniciales y números aleatorios
+            // 1. Generar ID único automático
             const iniciales = nombre.split(" ").map(n => n[0]).join("").toUpperCase();
             const aleatorio = Math.floor(1000 + Math.random() * 9000);
             const idUnico = `${iniciales}-${aleatorio}`;
 
             document.getElementById("txt-id").textContent = idUnico;
 
-            // Limpia el QR anterior si existe
+            // 2. Definir la URL base de tu app en GitHub Pages (REEMPLAZA con tu link real de GitHub Pages)
+            const urlBaseApp = "https://tu-usuario.github.io/control-asistencia-app/";
+
+            // Creamos un enlace que pasa el ID por la URL (Ej: .../?id=JP-8421)
+            const urlCompleta = `${urlBaseApp}?id=${idUnico}`;
+
+            document.getElementById("url-generada").textContent = "Enlace: " + urlCompleta;
+
+            // 3. Limpiar QR anterior y generar el nuevo con la URL completa
             document.getElementById("qrcode").innerHTML = "";
 
-            // Genera el nuevo código QR visual con ese ID
             new QRCode(document.getElementById("qrcode"), {
-                text: idUnico,
+                text: urlCompleta,
                 width: 200,
                 height: 200
             });
