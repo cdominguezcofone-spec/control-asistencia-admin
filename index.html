@@ -56,34 +56,21 @@
             const aleatorio = Math.floor(1000 + Math.random() * 9000);
             const idProvisional = `${iniciales}-${aleatorio}`;
 
-            // Creamos un formulario que se envía abriendo la respuesta del servidor en una pestaña nueva o de forma limpia
-            const form = document.createElement("form");
-            form.method = "POST";
-            form.action = URL_API;
-            form.target = "_blank"; // Abre una pestaña para confirmar que Google recibe los datos
+            // Enviamos los datos limpios directamente por los parámetros de la URL
+            const urlFinal = `${URL_API}?accion=nuevo_empleado&id_empleado=${encodeURIComponent(idProvisional)}&nombre=${encodeURIComponent(nombre)}&email=${encodeURIComponent(email)}&puesto=${encodeURIComponent(puesto)}`;
 
-            const datos = {
-                accion: "nuevo_empleado",
-                id_empleado: idProvisional,
-                nombre: nombre,
-                email: email,
-                puesto: puesto
-            };
-
-            for (const key in datos) {
-                const input = document.createElement("input");
-                input.type = "hidden";
-                input.name = key;
-                input.value = datos[key];
-                form.appendChild(input);
-            }
-
-            document.body.appendChild(form);
-            form.submit();
-            document.body.removeChild(form);
-
-            estadoEl.style.color = "green";
-            estadoEl.textContent = "¡Petición enviada! Revisa la pestaña nueva que se abrió.";
+            fetch(urlFinal, {
+                method: "GET",
+                mode: "no-cors"
+            })
+            .then(() => {
+                estadoEl.style.color = "green";
+                estadoEl.textContent = "¡Empleado guardado en la planilla con éxito!";
+            })
+            .catch(error => {
+                estadoEl.style.color = "red";
+                estadoEl.textContent = "Error al conectar con la planilla.";
+            });
 
             document.getElementById("txt-id").textContent = idProvisional;
 
