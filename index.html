@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generador de QR y Registro de Empleados</title>
+    <!-- Librería para generar códigos QR -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
@@ -36,7 +37,8 @@
     </div>
 
     <script>
-        const URL_API = "https://script.google.com/macros/s/AKfycbzPUk0uKHcQLChcyzjn8Dnjr1dEpkYF5PAGcWgzqFnTT18UqOPBRa51u_5wxxQT5wGRJg/exec";
+        // Recuerda reemplazar esta URL con la última que te proporcione Google Apps Script al hacer "Nueva versión"
+        const URL_API = "https://script.google.com/macros/s/TU_URL_DE_DEPLOY_AQUI/exec";
 
         function guardarYGenerarQR() {
             const nombre = document.getElementById("nombreEmpleado").value.trim();
@@ -56,34 +58,35 @@
             const aleatorio = Math.floor(1000 + Math.random() * 9000);
             const idProvisional = `${iniciales}-${aleatorio}`;
 
-            // Enviamos los datos limpios directamente por los parámetros de la URL
             const urlFinal = `${URL_API}?accion=nuevo_empleado&id_empleado=${encodeURIComponent(idProvisional)}&nombre=${encodeURIComponent(nombre)}&email=${encodeURIComponent(email)}&puesto=${encodeURIComponent(puesto)}`;
 
+            // Usamos redirect: "follow" para interactuar de forma fluida con Google Apps Script
             fetch(urlFinal, {
                 method: "GET",
-                mode: "no-cors"
+                redirect: "follow"
             })
-            .then(() => {
+            .then(response => {
                 estadoEl.style.color = "green";
                 estadoEl.textContent = "¡Empleado guardado en la planilla con éxito!";
+                
+                document.getElementById("txt-id").textContent = idProvisional;
+
+                const urlBaseApp = "https://cdominguezcofone-spec.github.io/control-asistencia-empresa/";
+                const urlCompleta = `${urlBaseApp}?id=${idProvisional}`;
+
+                document.getElementById("url-generada").textContent = "Enlace: " + urlCompleta;
+                document.getElementById("qrcode").innerHTML = "";
+
+                new QRCode(document.getElementById("qrcode"), {
+                    text: urlCompleta,
+                    width: 200,
+                    height: 200
+                });
             })
             .catch(error => {
                 estadoEl.style.color = "red";
                 estadoEl.textContent = "Error al conectar con la planilla.";
-            });
-
-            document.getElementById("txt-id").textContent = idProvisional;
-
-            const urlBaseApp = "https://cdominguezcofone-spec.github.io/control-asistencia-empresa/";
-            const urlCompleta = `${urlBaseApp}?id=${idProvisional}`;
-
-            document.getElementById("url-generada").textContent = "Enlace: " + urlCompleta;
-            document.getElementById("qrcode").innerHTML = "";
-
-            new QRCode(document.getElementById("qrcode"), {
-                text: urlCompleta,
-                width: 200,
-                height: 200
+                console.error("Error:", error);
             });
         }
     </script>
