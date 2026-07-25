@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generador de QR y Registro de Empleados</title>
-    <!-- Librería para generar códigos QR -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
@@ -34,6 +33,9 @@
         <div id="qrcode"></div>
         <div id="url-generada" class="info-link"></div>
         <p id="estado-guardado" style="font-weight: bold; margin-top: 10px;"></p>
+        
+        <!-- Iframe oculto para enviar datos sin problemas de CORS -->
+        <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
     </div>
 
     <script>
@@ -57,21 +59,34 @@
             const aleatorio = Math.floor(1000 + Math.random() * 9000);
             const idProvisional = `${iniciales}-${aleatorio}`;
 
-            // Enviamos los datos por parámetros URL (método GET) para evitar bloqueos de CORS
-            const urlConParametros = `${URL_API}?accion=nuevo_empleado&id_empleado=${encodeURIComponent(idProvisional)}&nombre=${encodeURIComponent(nombre)}&email=${encodeURIComponent(email)}&puesto=${encodeURIComponent(puesto)}`;
+            // Creamos un formulario dinámico oculto para enviar los datos de forma nativa (sin restricciones de CORS)
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = URL_API;
+            form.target = "hidden_iframe";
 
-            fetch(urlConParametros, {
-                method: "GET",
-                mode: "no-cors"
-            })
-            .then(() => {
-                estadoEl.style.color = "green";
-                estadoEl.textContent = "¡Empleado guardado en la planilla con éxito!";
-            })
-            .catch(error => {
-                estadoEl.style.color = "red";
-                estadoEl.textContent = "Error al conectar con la planilla.";
-            });
+            const datos = {
+                accion: "nuevo_empleado",
+                id_empleado: idProvisional,
+                nombre: nombre,
+                email: email,
+                puesto: puesto
+            };
+
+            for (const key in datos) {
+                const input = document.createElement("input");
+                input.type = "hidden";
+                input.name = key;
+                input.value = datos[key];
+                form.appendChild(input);
+            }
+
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+
+            estadoEl.style.color = "green";
+            estadoEl.textContent = "¡Empleado guardado en la planilla con éxito!";
 
             document.getElementById("txt-id").textContent = idProvisional;
 
