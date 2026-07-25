@@ -37,8 +37,8 @@
     </div>
 
     <script>
-        // Recuerda reemplazar esta URL con la última que te proporcione Google Apps Script al hacer "Nueva versión"
-        const URL_API = "https://script.google.com/macros/library/d/1spKTbuI3-kJp-Io49NA_Bsxk5IO0fZAyOgSbNN_seSDDf_nBiOeSmK6K/2";
+        // PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT QUE TERMINA EN /exec
+        const URL_API = "https://script.google.com/macros/s/AKfycbzPUk0uKHcQLChcyzjn8Dnjr1dEpkYF5PAGcWgzqFnTT18UqOPBRa51u_5wxxQT5wGRJg/exec";
 
         function guardarYGenerarQR() {
             const nombre = document.getElementById("nombreEmpleado").value.trim();
@@ -60,12 +60,12 @@
 
             const urlFinal = `${URL_API}?accion=nuevo_empleado&id_empleado=${encodeURIComponent(idProvisional)}&nombre=${encodeURIComponent(nombre)}&email=${encodeURIComponent(email)}&puesto=${encodeURIComponent(puesto)}`;
 
-            // Usamos redirect: "follow" para interactuar de forma fluida con Google Apps Script
+            // Usamos mode: 'no-cors' para evitar que el navegador bloquee el envío de datos a Google
             fetch(urlFinal, {
                 method: "GET",
-                redirect: "follow"
+                mode: "no-cors"
             })
-            .then(response => {
+            .then(() => {
                 estadoEl.style.color = "green";
                 estadoEl.textContent = "¡Empleado guardado en la planilla con éxito!";
                 
