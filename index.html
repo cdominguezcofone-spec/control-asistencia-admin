@@ -33,9 +33,6 @@
         <div id="qrcode"></div>
         <div id="url-generada" class="info-link"></div>
         <p id="estado-guardado" style="font-weight: bold; margin-top: 10px;"></p>
-        
-        <!-- Iframe oculto para enviar datos sin problemas de CORS -->
-        <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
     </div>
 
     <script>
@@ -59,11 +56,11 @@
             const aleatorio = Math.floor(1000 + Math.random() * 9000);
             const idProvisional = `${iniciales}-${aleatorio}`;
 
-            // Creamos un formulario dinámico oculto para enviar los datos de forma nativa (sin restricciones de CORS)
+            // Creamos un formulario que se envía abriendo la respuesta del servidor en una pestaña nueva o de forma limpia
             const form = document.createElement("form");
             form.method = "POST";
             form.action = URL_API;
-            form.target = "hidden_iframe";
+            form.target = "_blank"; // Abre una pestaña para confirmar que Google recibe los datos
 
             const datos = {
                 accion: "nuevo_empleado",
@@ -86,7 +83,7 @@
             document.body.removeChild(form);
 
             estadoEl.style.color = "green";
-            estadoEl.textContent = "¡Empleado guardado en la planilla con éxito!";
+            estadoEl.textContent = "¡Petición enviada! Revisa la pestaña nueva que se abrió.";
 
             document.getElementById("txt-id").textContent = idProvisional;
 
